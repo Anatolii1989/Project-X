@@ -4,50 +4,41 @@ import plotly_express as px
 import plotly.graph_objects as go
 
 df = pd.read_csv('vehicles_us.csv')
+
+# scatterplot in plotly_express with checkbox
+st.header('Car Price by Year')
+df_year_1940 = df[df.model_year > 1940]
+df_price_100k = df_year_1940[df.price < 100000]
+price_more_100k = st.checkbox('Include adds with price more than 100 000')
+if price_more_100k:
+    fig = px.scatter(
+    df_year_1940,
+    x="model_year",
+    y="price",
+    color="model_year",
+    color_continuous_scale="reds",)
+else:
+    fig = px.scatter(
+    df_price_100k,
+    x="model_year",
+    y="price",
+    color="model_year",
+    color_continuous_scale="reds",)
+
+tab1, tab2 = st.tabs(["Streamlit theme (default)", "Plotly native theme"])
+with tab1:
+    st.plotly_chart(fig, theme="streamlit", use_container_width=True)
+with tab2:
+    st.plotly_chart(fig, theme=None, use_container_width=True)
+
+# histogram in plotly_express
+st.header('Days Listed Adds (by Condition)')
+st.write(px.histogram(df, x='days_listed', color='condition'))
+
+# add new column "Manufacturer"
 df['manufacturer'] = df['model'].apply(lambda x: x.split()[0])
 
-st.header('Data viewer')
-show_manuf_1k_ads = st.checkbox('Include manufacturers with less than 1000 ads')
-if not show_manuf_1k_ads:
-    df = df.groupby('manufacturer').filter(lambda x: len(x) > 1000)
-
-st.dataframe(df)
-st.header('Vehicle types by manufacturer')
-st.write(px.histogram(df, x='manufacturer', color='type'))
-st.header('Histogram of `condition` vs `model_year`')
-
-# -------------------------------------------------------
-# histograms in plotly:
-# fig = go.Figure()
-# fig.add_trace(go.Histogram(x=df[df['condition']=='good']['model_year'], name='good'))
-# fig.add_trace(go.Histogram(x=df[df['condition']=='excellent']['model_year'], name='excellent'))
-# fig.update_layout(barmode='stack')
-# st.write(fig)
-# works, but too many lines of code
-# -------------------------------------------------------
-
-# histograms in plotly_express:
-st.write(px.histogram(df, x='model_year', color='condition'))
-# a lot more concise!
-# -------------------------------------------------------
-
-st.header('Compare price distribution between manufacturers')
-manufac_list = sorted(df['manufacturer'].unique())
-manufacturer_1 = st.selectbox('Select manufacturer 1',
-                              manufac_list, index=manufac_list.index('chevrolet'))
-
-manufacturer_2 = st.selectbox('Select manufacturer 2',
-                              manufac_list, index=manufac_list.index('hyundai'))
-mask_filter = (df['manufacturer'] == manufacturer_1) | (df['manufacturer'] == manufacturer_2)
-df_filtered = df[mask_filter]
-normalize = st.checkbox('Normalize histogram', value=True)
-if normalize:
-    histnorm = 'percent'
-else:
-    histnorm = None
-st.write(px.histogram(df_filtered,
-                      x='price',
-                      nbins=30,
-                      color='manufacturer',
-                      histnorm=histnorm,
-                      barmode='overlay'))
+# boxplot in plotly_express
+df_price_filtered50 = df[(df.price < 50000) & (df.model_year > 1940)]
+st.header('Car Price Distribution by Manufacturer')
+st.write(px.box(df_price_filtered50, x='manufacturer', y='price', color='manufacturer'))
