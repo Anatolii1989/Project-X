@@ -4,6 +4,27 @@ import plotly_express as px
 
 df = pd.read_csv('vehicles_us.csv')
 
+
+# DATA PREPROCESSING
+
+# filling in the missing values in column 'model_year'
+model_year_dict = df.groupby('model').model_year.median().to_dict()
+df['model_year_median'] = df.model.map(model_year_dict)
+df['model_year'] = df.model_year.fillna(df.model_year_median)
+
+# filling in the missing values in column 'cylinders'
+cylinders_dict = df.groupby('model').cylinders.median().to_dict()
+df['cylinders_median'] = df.model.map(cylinders_dict)
+df['cylinders'] = df.cylinders.fillna(df.cylinders_median)
+
+# filling in the missing values in column 'odometer' 
+odometer_dict = df.groupby('model_year').odometer.median().to_dict()
+df['odometer_median'] = df.model_year.map(odometer_dict)
+df['odometer'] = df.odometer.fillna(df.odometer_median)
+
+
+# CREATING CHARTS
+
 # scatterplot in plotly_express with checkbox
 st.header('Car Price by Year')
 df_year_1940 = df[df.model_year > 1940]
